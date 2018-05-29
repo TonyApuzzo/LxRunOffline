@@ -7,7 +7,7 @@ if (-not [Environment]::Is64BitOperatingSystem) {
 	throw "This package requires a 64-bit Windows."
 }
 
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+$wslEnableResult = Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-Windows-Subsystem-Linux
 
 New-ItemProperty -Force -Path 'HKLM:\System\CurrentControlSet\Control\Session Manager\Kernel' -Name 'obcaseinsensitive' -Value 0 -PropertyType Dword
 Write-Warning 'Please restart your system to let registry changes take effect.'
@@ -20,3 +20,8 @@ if (Test-Path $unzipLocation) {
 }
 Install-ChocolateyZipPackage -PackageName $packageName -Url $url -UnzipLocation $unzipLocation -Checksum '{CHECKSUM}' -ChecksumType 'sha256'
 Install-ChocolateyPath -PathToInstall $unzipLocation -PathType 'Machine'
+
+if ($wslEnableResult.RestartNeeded) {
+	# Exit with 3010 to request reboot later
+	exit 3010
+}
